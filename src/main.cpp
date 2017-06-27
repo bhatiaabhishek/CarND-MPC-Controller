@@ -99,6 +99,7 @@ int main() {
           delta = -1*delta;
 
           double latency = 0.1; // 100 ms latency
+          int latency_ms = latency*1000;
           
           double x_new, y_new, psi_new, v_new;
           
@@ -181,7 +182,7 @@ int main() {
           //
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
-          this_thread::sleep_for(chrono::milliseconds(100));
+          this_thread::sleep_for(chrono::milliseconds(latency_ms));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
