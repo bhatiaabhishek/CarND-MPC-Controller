@@ -46,7 +46,7 @@ Before the transformation described above, I factor-in the actuator latency of 1
 
 Given a real-world delay in actuations, the model must account for it. I observe oscillations and worsening trajectory if this is not accounted for. In this project we account for 100ms latency. 
 
-I account for it by calculating the expected/predicted global position, velocity, heading of the car after the 100ms delay, before transforming waypoints. Also since dt = 0.05 i.e. 2xlatency, I return 2nd actuator values instead of the first ones.
+Before transforming waypoints, I calculate the expected global position, velocity, heading of the car after the 100ms delay. Also since dt = 0.05 i.e. 2xlatency, I return 2nd actuator values instead of the first ones.
 
      // To account for latency
      x_new = px + (v*cos(psi)*latency);
