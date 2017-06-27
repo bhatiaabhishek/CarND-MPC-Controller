@@ -2,6 +2,61 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ---
+## PROJECT DESCRIPTION
+
+The controller implemented in this project is a non-linear model-predictive controller that steers a car around the track in [Udacity's simulator](https://github.com/udacity/self-driving-car-sim/releases). The simulator provides the present state of the car i.e the position, speed and heading of the car. It also provides a set of coordinates that act as way-points. All the coordinates are in global coordinate system.
+
+## MPC Model
+
+The controller is implemented as a 6 state - 2 actuator kinematic model. It following equations describe the model:
+
+      X Position --> x(t+1) = x0 + v0 * cos(psi0) * dt;
+      Y Position --> y(t+1) = y0 + v0 * sin(psi0) * dt;
+      Heading    --> psi(t+1) = psi0 + (v0*delta0*dt/Lf);
+      Velocity   --> v(t+1) = v0 + a0*dt ;
+      Cross-track-err --> cte(t+1) = f(x0) - y0 + (v0*sin(epsi0)*dt);
+      Orientation err --> epsi(t+1)  = psi0 - arctan(f'(x0)) + (v0*delta0*dt/Lf));
+
+The actuators values are the steering angle and the acceleration. Lf is the distance between the center of mass of the car and the front wheels.
+
+For each iteration, the cost of the predicted trajectory is minimized by the actuator values. The cost includes the following:
+
+    -> cte^2 (Penalty on cross-track-error)
+    -> epsi^2 (Penalty on total orientation error)
+    -> (v-80)^2 (Penalty for speed to be less than 80mph)
+    -> Delta^2 (Minimize the steering angle use)
+    -> Acceleration^2 (Minimize the use of throttle)
+    -> 500*(delta(t+1) - delta(t)) (Penalize sudden changes in steering angle)
+    --> a(t+1) - a(t) (Penalty on sudden changes in acceleration)
+
+
+## Timestep Length and Elapsed Duration (N & dt)
+
+The total time for each horizon is calculated as N times dt. I chose a value of 0.05 to achieve finer actuator control. I tried different values of N to increase or decrease the length of the horizon. I tried N=25 but it resulted it a longer prediction horizon. For a "S" like curve it did a bad job because I have a quadratic fitting curve. Too short of a horizon lead to unstability. I chose a final value of 10 that worked well for me.
+
+## Polynomial Fitting and MPC Preprocessing
+
+Since all coordinates are provided in global coordinate system, I convert all the coordinates to the vehicle system. The waypoints are origin-shifted and 2D rotated to the vehicle frame of reference. I fit the waypoints to a 2nd-degree polynomial to get the fitting coefficients.
+
+The initial vehicle position and heading are always 0 in vehicle frame of reference.
+
+Before the transformation described above, I factor-in the actuator latency of 100ms. It is decribed below.
+
+## Model Predictive Control with Latency
+
+Given a real-world delay in actuations, the model must account for it. I observe oscillations and worsening trajectory if this is not accounted for. In this project we account for 100ms latency. 
+
+I account for it by calculating the expected/predicted global position, velocity, heading of the car after the 100ms delay, before transforming waypoints. Also since dt = 0.05 i.e. 2xlatency, I return 2nd actuator values instead of the first ones.
+
+     // To account for latency
+     x_new = px + (v*cos(psi)*latency);
+     y_new = py + (v*sin(psi)*latency);
+     v_new = v + (accel*latency); 
+     psi_new = psi + (v*delta*latency/2.67);
+     
+This approach worked well for me.
+
+
 
 ## Dependencies
 
@@ -50,66 +105,3 @@ Self-Driving Car Engineer Nanodegree Program
 3. Compile: `cmake .. && make`
 4. Run it: `./mpc`.
 
-## Tips
-
-1. It's recommended to test the MPC on basic examples to see if your implementation behaves as desired. One possible example
-is the vehicle starting offset of a straight line (reference). If the MPC implementation is correct, after some number of timesteps
-(not too many) it should find and track the reference line.
-2. The `lake_track_waypoints.csv` file has the waypoints of the lake track. You could use this to fit polynomials and points and see of how well your model tracks curve. NOTE: This file might be not completely in sync with the simulator so your solution should NOT depend on it.
-3. For visualization this C++ [matplotlib wrapper](https://github.com/lava/matplotlib-cpp) could be helpful.
-
-## Editor Settings
-
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
-
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
-
-## Code Style
-
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
-
-## Project Instructions and Rubric
-
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
-
-More information is only accessible by people who are already enrolled in Term 2
-of CarND. If you are enrolled, see [the project page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/f1820894-8322-4bb3-81aa-b26b3c6dcbaf/lessons/b1ff3be0-c904-438e-aad3-2b5379f0e0c3/concepts/1a2255a0-e23c-44cf-8d41-39b8a3c8264a)
-for instructions and the project rubric.
-
-## Hints!
-
-* You don't have to follow this directory structure, but if you do, your work
-  will span all of the .cpp files here. Keep an eye out for TODOs.
-
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to we ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
