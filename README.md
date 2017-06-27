@@ -8,7 +8,7 @@ The controller implemented in this project is a non-linear model-predictive cont
 
 ## MPC Model
 
-The controller is implemented as a 6 state - 2 actuator kinematic model. It following equations describe the model:
+The controller is implemented as a 6 state - 2 actuator kinematic model. The following equations describe the model:
 
       X Position --> x(t+1) = x0 + v0 * cos(psi0) * dt;
       Y Position --> y(t+1) = y0 + v0 * sin(psi0) * dt;
