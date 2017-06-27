@@ -4,7 +4,7 @@ Self-Driving Car Engineer Nanodegree Program
 ---
 ## PROJECT DESCRIPTION
 
-The controller implemented in this project is a non-linear model-predictive controller that steers a car around the track in [Udacity's simulator](https://github.com/udacity/self-driving-car-sim/releases). The simulator provides the present state of the car i.e the position, speed and heading of the car. It also provides a set of coordinates that act as way-points. All the coordinates are in global coordinate system.
+The controller implemented in this project is a non-linear model-predictive controller that steers a car around the track in [Udacity's simulator](https://github.com/udacity/self-driving-car-sim/releases). The simulator provides the present state of the car i.e the position, speed and heading. It also provides a set of coordinates that act as way-points. All the coordinates are in global coordinate system.
 
 ## MPC Model
 
